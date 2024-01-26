@@ -26,8 +26,9 @@ async fn main() {
     let port = 6000;
     println!("Listening on port {}", port);
 
-    axum::Server::bind(&format!("127.0.0.1:{}", port).parse().unwrap())
-        .serve(app.into_make_service())
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind(&format!("0.0.0.0:{}", port))
         .await
         .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }

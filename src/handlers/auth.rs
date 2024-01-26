@@ -3,6 +3,7 @@ use crate::handlers::utils;
 use crate::services::auth;
 use crate::services::jwt;
 
+use axum::body::Body;
 use axum::{
     extract::State,
     http::{self, Request, StatusCode},
@@ -123,7 +124,7 @@ pub async fn login(
     (StatusCode::OK, Json(LoginResponse::new(token))).into_response()
 }
 
-pub async fn validate<B>(mut req: Request<B>, next: Next<B>) -> Response {
+pub async fn validate(mut req: Request<Body>, next: Next) -> Response {
     let auth_header = req
         .headers()
         .get(http::header::AUTHORIZATION)
