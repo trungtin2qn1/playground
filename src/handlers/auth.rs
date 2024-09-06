@@ -57,11 +57,13 @@ pub async fn register(
 
     let token;
     match auth::register(
-        &mut _state.db,
-        &_payload.email,
-        &_payload.password,
-        &_payload.name,
-    ) {
+        &_state.db_pool,
+        _payload.email,
+        _payload.password,
+        _payload.name,
+    )
+    .await
+    {
         Ok(_token) => token = _token,
         Err(e) => {
             return (e.http_code, Json(utils::Response::new(e.message))).into_response();
@@ -114,7 +116,7 @@ pub async fn login(
     }
 
     let token;
-    match auth::login(&mut _state.db, &_payload.email, &_payload.password) {
+    match auth::login(&_state.db_pool, _payload.email, _payload.password).await {
         Ok(_token) => token = _token,
         Err(e) => {
             return (e.http_code, Json(utils::Response::new(e.message))).into_response();
@@ -141,8 +143,8 @@ pub async fn validate(mut req: Request<Body>, next: Next) -> Response {
     };
 
     match jwt::validate_token(auth_header.to_string()) {
-        Ok(current_user_email) => {
-            req.extensions_mut().insert(current_user_email);
+        Ok(current_user_id) => {
+            req.extensions_mut().insert(current_user_id);
             next.run(req).await
         }
         Err(e) => (

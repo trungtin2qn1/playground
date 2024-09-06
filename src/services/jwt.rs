@@ -6,7 +6,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ClaimData {
-    email: String,
+    id: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,7 +16,7 @@ pub struct Claims {
     data: ClaimData,
 }
 
-pub fn create_token(email: String) -> Result<String, error::Error> {
+pub fn create_token(id: i64) -> Result<String, error::Error> {
     let key = b"secret_key";
 
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?;
@@ -24,7 +24,7 @@ pub fn create_token(email: String) -> Result<String, error::Error> {
     let claims = Claims {
         created_at: now.as_secs() as usize,
         exp: (now + Duration::new(10000000, 0)).as_secs() as usize,
-        data: ClaimData { email },
+        data: ClaimData { id },
     };
 
     match encode(&Header::default(), &claims, &EncodingKey::from_secret(key)) {
@@ -37,12 +37,12 @@ pub fn create_token(email: String) -> Result<String, error::Error> {
     }
 }
 
-pub fn validate_token(token: String) -> Result<String, error::Error> {
+pub fn validate_token(token: String) -> Result<i64, error::Error> {
     let key = b"secret_key";
     let validation = Validation::default();
 
     match decode::<Claims>(&token, &DecodingKey::from_secret(key), &validation) {
-        Ok(c) => Ok(c.claims.data.email),
+        Ok(c) => Ok(c.claims.data.id),
         Err(e) => Err(e.into()),
     }
 }

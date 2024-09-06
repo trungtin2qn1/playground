@@ -25,16 +25,6 @@ impl From<SystemTimeError> for Error {
     }
 }
 
-impl From<sled::Error> for Error {
-    fn from(e: sled::Error) -> Self {
-        Error {
-            kind: String::from("sled_db"),
-            message: e.to_string(),
-            http_code: StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-}
-
 impl From<serde_json::Error> for Error {
     fn from(e: serde_json::Error) -> Self {
         Error {
@@ -59,6 +49,26 @@ impl From<jsonwebtoken::errors::Error> for Error {
     fn from(e: jsonwebtoken::errors::Error) -> Self {
         Error {
             kind: String::from("jwt"),
+            message: e.to_string(),
+            http_code: StatusCode::UNAUTHORIZED,
+        }
+    }
+}
+
+impl From<tokio_postgres::Error> for Error {
+    fn from(e: tokio_postgres::Error) -> Self {
+        Error {
+            kind: String::from("postgres"),
+            message: e.to_string(),
+            http_code: StatusCode::UNAUTHORIZED,
+        }
+    }
+}
+
+impl From<deadpool_postgres::PoolError> for Error {
+    fn from(e: deadpool_postgres::PoolError) -> Self {
+        Error {
+            kind: String::from("postgres"),
             message: e.to_string(),
             http_code: StatusCode::UNAUTHORIZED,
         }

@@ -1,11 +1,10 @@
 #[derive(Clone)]
 pub struct RootState {
-    pub db: sled::Db,
+    pub db_pool: deadpool_postgres::Pool,
 }
 
 impl RootState {
-    pub fn new() -> Self {
-        let db: sled::Db = sled::open("database").unwrap();
-        RootState { db }
+    pub fn new(db_pool: deadpool_postgres::Pool) -> Self {
+        RootState { db_pool }
     }
 }

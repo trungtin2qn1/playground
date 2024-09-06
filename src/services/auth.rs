@@ -3,33 +3,25 @@ use crate::{common::error, services::jwt};
 use axum::http::StatusCode;
 use bcrypt::{hash, verify, DEFAULT_COST};
 
-pub fn register(
-    db: &mut sled::Db,
-    email: &String,
-    password: &String,
-    name: &String,
+pub async fn register(
+    db_pool: &deadpool_postgres::Pool,
+    email: String,
+    password: String,
+    name: String,
 ) -> Result<String, error::Error> {
-    let user_db = user::get_user_by_email(db, email)?;
-    if let Some(_) = user_db {
-        return Err(error::Error {
-            kind: "unauthorized".to_string(),
-            message: "this email has been registered".to_string(),
-            http_code: StatusCode::UNAUTHORIZED,
-        });
-    };
     let hashed = hash(password, DEFAULT_COST)?;
-    let token = jwt::create_token(email.clone())?;
-
-    user::create_user(
-        db,
-        user::UserDb::new(email.to_string(), hashed, name.to_string()),
-    )?;
+    let id = user::create_user(db_pool, user::UserDb::new(0, email, hashed, name)).await?;
+    let token = jwt::create_token(id)?;
 
     Ok(token)
 }
 
-pub fn login(db: &mut sled::Db, email: &String, password: &String) -> Result<String, error::Error> {
-    let user_db = user::get_user_by_email(db, email)?;
+pub async fn login(
+    db_pool: &deadpool_postgres::Pool,
+    email: String,
+    password: String,
+) -> Result<String, error::Error> {
+    let user_db = user::get_user_by_email(db_pool, &email).await?;
     let user_db = if let Some(user_db) = user_db {
         user_db
     } else {
@@ -47,7 +39,7 @@ pub fn login(db: &mut sled::Db, email: &String, password: &String) -> Result<Str
             http_code: StatusCode::UNAUTHORIZED,
         });
     }
-    let token = jwt::create_token(email.clone())?;
+    let token = jwt::create_token(user_db.id)?;
 
     Ok(token)
 }

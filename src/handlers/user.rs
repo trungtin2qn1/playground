@@ -4,21 +4,22 @@ use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct GetUserSelfResponse {
+    id: i64,
     email: String,
     name: String,
 }
 
 impl GetUserSelfResponse {
-    fn new(email: String, name: String) -> Self {
-        GetUserSelfResponse { email, name }
+    fn new(id: i64, email: String, name: String) -> Self {
+        GetUserSelfResponse { id, email, name }
     }
 }
 
 pub async fn get_user_self(
     State(mut _state): State<state::RootState>,
-    Extension(current_user_email): Extension<String>,
+    Extension(current_user_id): Extension<i64>,
 ) -> impl IntoResponse {
-    let user = match user::get_user_by_email(&_state.db, &current_user_email) {
+    let user = match user::get_user_by_id(&_state.db_pool, &current_user_id).await {
         Ok(user) => user,
         Err(e) => {
             return (e.http_code, Json(utils::Response::new(e.message))).into_response();
@@ -27,7 +28,7 @@ pub async fn get_user_self(
 
     (
         StatusCode::OK,
-        Json(GetUserSelfResponse::new(user.email, user.name)),
+        Json(GetUserSelfResponse::new(user.id, user.email, user.name)),
     )
         .into_response()
 }
