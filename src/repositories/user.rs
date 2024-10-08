@@ -7,16 +7,14 @@ pub struct UserDb {
     pub id: i64,
     pub email: String,
     pub password: String,
-    pub name: String,
 }
 
 impl UserDb {
-    pub fn new(id: i64, email: String, password: String, name: String) -> Self {
+    pub fn new(id: i64, email: String, password: String) -> Self {
         UserDb {
             id,
             email,
             password,
-            name,
         }
     }
 }
@@ -27,7 +25,6 @@ impl Default for UserDb {
             id: 0,
             email: "".to_string(),
             password: "".to_string(),
-            name: "".to_string(),
         }
     }
 }
@@ -40,16 +37,12 @@ pub async fn get_user_by_id(
 
     // Query the database for the user with the specified email
     let row = client
-        .query_one(
-            "SELECT id, email, username FROM users WHERE id = $1",
-            &[&id],
-        )
+        .query_one("SELECT id, email FROM users WHERE id = $1", &[&id])
         .await?;
 
     let mut user = UserDb::default();
     user.id = row.get(0);
     user.email = row.get(1);
-    user.name = row.get(2);
 
     Ok(Some(user))
 }
@@ -63,7 +56,7 @@ pub async fn get_user_by_email(
     // Query the database for the user with the specified email
     let row_opt = client
         .query_opt(
-            "SELECT id, email, username, password FROM users WHERE email = $1",
+            "SELECT id, email, password FROM users WHERE email = $1",
             &[&email],
         )
         .await?;
@@ -73,8 +66,7 @@ pub async fn get_user_by_email(
             let mut user = UserDb::default();
             user.id = row.get(0);
             user.email = row.get(1);
-            user.name = row.get(2);
-            user.password = row.get(3);
+            user.password = row.get(2);
 
             return Ok(Some(user));
         }
@@ -93,8 +85,8 @@ pub async fn create_user(
     // Insert the user into the database
     let row = client
         .query_one(
-            "INSERT INTO users (email, username, password) VALUES ($1, $2, $3) RETURNING id",
-            &[&user_db.email, &user_db.name, &user_db.password],
+            "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
+            &[&user_db.email, &user_db.password],
         )
         .await?;
 

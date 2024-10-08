@@ -7,10 +7,9 @@ pub async fn register(
     db_pool: &deadpool_postgres::Pool,
     email: String,
     password: String,
-    name: String,
 ) -> Result<String, error::Error> {
     let hashed = hash(password, DEFAULT_COST)?;
-    let id = user::create_user(db_pool, user::UserDb::new(0, email, hashed, name)).await?;
+    let id = user::create_user(db_pool, user::UserDb::new(0, email, hashed)).await?;
     let token = jwt::create_token(id)?;
 
     Ok(token)

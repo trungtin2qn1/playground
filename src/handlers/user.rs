@@ -6,12 +6,11 @@ use serde::Serialize;
 pub struct GetUserSelfResponse {
     id: i64,
     email: String,
-    name: String,
 }
 
 impl GetUserSelfResponse {
-    fn new(id: i64, email: String, name: String) -> Self {
-        GetUserSelfResponse { id, email, name }
+    fn new(id: i64, email: String) -> Self {
+        GetUserSelfResponse { id, email }
     }
 }
 
@@ -28,7 +27,7 @@ pub async fn get_user_self(
 
     (
         StatusCode::OK,
-        Json(GetUserSelfResponse::new(user.id, user.email, user.name)),
+        Json(GetUserSelfResponse::new(user.id, user.email)),
     )
         .into_response()
 }

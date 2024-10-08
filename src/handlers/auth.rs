@@ -14,19 +14,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 pub struct RegisterResponse {
-    access_token: String,
+    token: String,
 }
 
 impl RegisterResponse {
-    fn new(access_token: String) -> Self {
-        RegisterResponse { access_token }
+    fn new(token: String) -> Self {
+        RegisterResponse { token }
     }
 }
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct RegisterPayload {
     email: String,
-    name: String,
     password: String,
 }
 
@@ -36,7 +35,7 @@ impl RegisterPayload {
             return Err("length of email need be more than 6".to_string());
         }
         if self.password.len() < 6 {
-            return Err("password of email need to be more than 6".to_string());
+            return Err("length of password need to be more than 6".to_string());
         }
 
         Ok(())
@@ -56,14 +55,7 @@ pub async fn register(
     }
 
     let token;
-    match auth::register(
-        &_state.db_pool,
-        _payload.email,
-        _payload.password,
-        _payload.name,
-    )
-    .await
-    {
+    match auth::register(&_state.db_pool, _payload.email, _payload.password).await {
         Ok(_token) => token = _token,
         Err(e) => {
             return (e.http_code, Json(utils::Response::new(e.message))).into_response();
@@ -75,12 +67,12 @@ pub async fn register(
 
 #[derive(Serialize)]
 pub struct LoginResponse {
-    access_token: String,
+    token: String,
 }
 
 impl LoginResponse {
-    fn new(access_token: String) -> Self {
-        LoginResponse { access_token }
+    fn new(token: String) -> Self {
+        LoginResponse { token }
     }
 }
 
@@ -96,7 +88,7 @@ impl LoginPayload {
             return Err("length of email need be more than 6".to_string());
         }
         if self.password.len() < 6 {
-            return Err("password of email need to be more than 6".to_string());
+            return Err("length of password need to be more than 6".to_string());
         }
 
         Ok(())
